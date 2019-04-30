@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<link rel="apple-touch-icon" sizes="76x76" href="/static/assets/img/apple-icon.png">
+	<link rel="icon" type="image/png" sizes="96x96" href="/static/assets/img/favicon.png">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+
+	<title>Zap Merchant Test</title>
+
+	<meta content='width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0' name='viewport' />
+    <meta name="viewport" content="width=device-width" />
+
+
+    <!-- Bootstrap core CSS     -->
+    <link href="/static/assets/css/bootstrap.min.css" rel="stylesheet" />
+
+    <!-- Animation library for notifications   -->
+    <link href="/static/assets/css/animate.min.css" rel="stylesheet"/>
+
+    <!-- Chartist tooltip plugin -->
+    <link href="/static/assets/css/chartist-plugin-tooltip.css" rel="stylesheet"/>
+
+    <!--  Paper Dashboard core CSS    -->
+    <link href="/static/assets/css/paper-dashboard.css" rel="stylesheet"/>
+
+    <!--  Fonts and icons     -->
+    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/latest/css/font-awesome.min.css" rel="stylesheet">
+    <link href='https://fonts.googleapis.com/css?family=Muli:400,300' rel='stylesheet' type='text/css'>
+    <link href="/static/assets/css/themify-icons.css" rel="stylesheet">
+
+</head>
+<body>
+
+<div class="wrapper">
+
+    <div class="main-panel">
+
+        <div class="content">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-lg-3 col-sm-6">
+                        {% if qrcode_data %}
+                            <p>ZAP payment code</p>
+                        {% else %}
+                            <p>Enter ZAP amount</p>
+                        {% endif %}
+                        {% if qrcode_data %}
+                            <img src="{{ qrcode(qrcode_data) }}">
+                        {% else %}
+                        <form method="get" action="/check/{{addr}}">
+                            <input type="hidden" id="invoice_id" name="invoice_id" value="{{invoice_id}}">
+                            <div class="form-group">
+                                <label for="addr">Address</label>
+                                <input type="text" class="form-control" id="addr" value="{{addr}}" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label for="amount">Amount</label>
+                                <input type="number" step="0.01" class="form-control" id="amount" name="amount" placeholder="Enter amount">
+                            </div>
+                            <button type="submit" class="btn btn-primary">Submit</button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+
+        <footer class="footer">
+            <div class="container-fluid">
+                <nav class="pull-left">
+                    <ul>
+
+                        <li>
+                            <a href="#">
+                                ZAP MERCHANT TEST
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+                <div class="copyright pull-right">
+                    &copy; <script>document.write(new Date().getFullYear())</script>, made with <i class="fa fa-heart heart"></i> by <a href="http://www.creative-tim.com">Creative Tim</a>
+                </div>
+            </div>
+        </footer>
+
+    </div>
+</div>
+
+<div class="modal" id="payment-modal" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Detected Payment!</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <p id="modal-p">Modal body text goes here.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Ok</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+</body>
+
+    <!--   Core JS Files   -->
+    <script src="/static/assets/js/jquery.min.js" type="text/javascript"></script>
+	<script src="/static/assets/js/bootstrap.min.js" type="text/javascript"></script>
+
+	<!--  Checkbox, Radio & Switch Plugins -->
+	<script src="/static/assets/js/bootstrap-checkbox-radio.js"></script>
+
+	<!--  Charts Plugin -->
+	<script src="/static/assets/js/chartist.min.js"></script>
+	<script src="/static/assets/js/chartist-plugin-tooltip.js"></script>
+
+	<!--  Moment Plugin -->
+	<script src="/static/assets/js/moment.min.js"></script>
+
+    <!--  Notifications Plugin    -->
+    <script src="/static/assets/js/bootstrap-notify.js"></script>
+
+    <!-- Paper Dashboard Core javascript and methods -->
+	<script src="/static/assets/js/paper-dashboard.js"></script>
+
+    {% if qrcode_data %}
+    <script>
+
+        function from_b58(
+            S            //Base58 encoded string input
+        )
+        {
+            var A = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+            var d = [],   //the array for storing the stream of decoded bytes
+                b = [],   //the result byte array that will be returned
+                i,        //the iterator variable for the base58 string
+                j,        //the iterator variable for the byte array (d)
+                c,        //the carry amount variable that is used to overflow from the current byte to the next byte
+                n;        //a temporary placeholder variable for the current byte
+            for(i in S) { //loop through each base58 character in the input string
+                j = 0,                             //reset the byte iterator
+                c = A.indexOf( S[i] );             //set the initial carry amount equal to the current base58 digit
+                if(c < 0)                          //see if the base58 digit lookup is invalid (-1)
+                    return undefined;              //if invalid base58 digit, bail out and return undefined
+                c || b.length ^ i ? i : b.push(0); //prepend the result array with a zero if the base58 digit is zero and non-zero characters haven't been seen yet (to ensure correct decode length)
+                while(j in d || c) {               //start looping through the bytes until there are no more bytes and no carry amount
+                    n = d[j];                      //set the placeholder for the current byte
+                    n = n ? n * 58 + c : c;        //shift the current byte 58 units and add the carry amount (or just add the carry amount if this is a new byte)
+                    c = n >> 8;                    //find the new carry amount (1-byte shift of current byte value)
+                    d[j] = n % 256;                //reset the current byte to the remainder (the carry amount will pass on the overflow)
+                    j++                            //iterate to the next byte
+                }
+            }
+            while(j--)               //since the byte array is backwards, loop through it in reverse order
+                b.push( d[j] );      //append each byte to the result
+            return new Uint8Array(b) //return the final byte array in Uint8Array format
+        }
+
+        function from_b58s(S) {
+            return new TextDecoder("utf-8").decode(from_b58(S));
+        }
+
+        function checkPayment() {
+            console.log("check payment..");
+            $.getJSON("https://testnode1.wavesnodes.com/transactions/address/{{addr}}/limit/10", function(data) {
+                for (var i = 0; i < data[0].length; i++) {
+                    var item = data[0][i];
+                    if (item.type == 4 && item.assetId == "{{asset_id}}" && item.amount >= {{amount}}) {
+                        try {
+                            var attachment = from_b58s(item.attachment);
+                            var attachment = JSON.parse(attachment);
+                            if (attachment.invoice_id == "{{invoice_id}}") {
+                                console.log("woo payment! " + item.id);
+                                console.log(item);
+                                $("#modal-p").text(item.id);
+                                $("#payment-modal").modal("show");
+                                return;
+                            }
+                        }
+                        catch {}
+                    }
+                }
+                setTimeout(checkPayment, 5000);
+            }).fail(function() {
+                console.log("payment check failed");
+                setTimeout(checkPayment, 5000);
+            });
+        };
+
+        $(document).ready(function() {
+            console.log("looking for payment:");
+            console.log("  - addr:     {{addr}}");
+            console.log("  - asset id: {{asset_id}}");
+            console.log("  - amount:   {{amount}}");
+            setTimeout(checkPayment, 5000);
+        });
+    </script>
+    {% endif %}
+
+</html>
