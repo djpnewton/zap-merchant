@@ -13,14 +13,21 @@ import pywaves as pw
 #from models import KycRequest
 
 #init_db()
-pw.setNode('https://testnode1.wavesnodes.com', 'testnet')
+# testnet node
+#TESTNET_WAVES_NODE='https://testnode1.wavesnodes.com'
+#pw.setNode(TESTNET_WAVES_NODE, 'testnet')
+# mainnet node
+WAVES_NODE='https://nodes.wavesnodes.com'
+pw.setNode(WAVES_NODE, 'mainnet')
 pw.setOnline()
 logger = logging.getLogger(__name__)
 app = Flask(__name__)
 qrcode = QRcode(app)
 
 # testnet asset id
-ASSET_ID='CgUrFtinLXEbJwJVjwwcppk4Vpz1nMmR3H5cQaDcUcfe'
+#ASSET_ID='CgUrFtinLXEbJwJVjwwcppk4Vpz1nMmR3H5cQaDcUcfe'
+# mainnet asset id
+ASSET_ID='9R3iLi4qGLVWKc16Tg98gmRvgg1usGEYd7SgC1W5D6HB'
 asset = pw.Asset(ASSET_ID)
 if asset.status() != 'Issued':
     print("ERROR: could not load asset")
@@ -63,11 +70,14 @@ def check(addr=None):
     if not pw.validateAddress(addr):
         return abort(400, 'invalid address')
     amount = request.args.get('amount')
-    global asset
-    amount_int = int(round(float(amount) * 10**asset.decimals))
+    try:
+        amount = float(amount)
+    except:
+        abort(400, f'invalid amount "{amount}"')
+    amount_int = int(round(amount * 10**asset.decimals))
     invoice_id = request.args.get('invoice_id')
     qrcode_data = f'waves://{addr}?asset={ASSET_ID}&amount={amount_int}&attachment={{"invoice_id":"{invoice_id}"}}'
-    return render_template('addr.html', addr=addr, invoice_id=invoice_id, qrcode_data=qrcode_data, asset_id=ASSET_ID, amount=amount_int)
+    return render_template('addr.html', addr=addr, invoice_id=invoice_id, qrcode_data=qrcode_data, asset_id=ASSET_ID, amount=amount_int, node=WAVES_NODE)
 
 
 if __name__ == '__main__':
