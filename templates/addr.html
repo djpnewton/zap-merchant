@@ -117,7 +117,8 @@
         </button>
       </div>
       <div class="modal-body">
-        <p id="modal-p">Modal body text goes here.</p>
+        <p id="tx-amount">amount here</p>
+        <p id="tx-id">txid here</p>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-dismiss="modal">Ok</button>
@@ -201,7 +202,8 @@
                             if (attachment.invoice_id == "{{invoice_id}}") {
                                 console.log("woo payment! " + item.id);
                                 console.log(item);
-                                $("#modal-p").text(item.id);
+                                $("#tx-amount").text("Amount: " + item.amount/100 + " ZAP");
+                                $("#tx-id").text("TXID: " + item.id);
                                 $("#payment-modal").modal("show");
                                 return;
                             }
