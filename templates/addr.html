@@ -49,10 +49,11 @@
                             <p>Enter ZAP amount</p>
                         {% endif %}
                         {% if qrcode_data %}
-                            <img src="{{ qrcode(qrcode_data) }}">
+                            <img id="qrcode" src="{{ qrcode(qrcode_data) }}">
+                            <a id="restart-link" style="display:none" href="/req/{{addr}}"><h3>Create another payment request</h3></a>
                         {% else %}
                         <form method="get" action="/check/{{addr}}">
-                            <input type="hidden" id="invoice_id" name="invoice_id" value="{{invoice_id}}">
+                            <input type="hidden" id="invoice_id" name="invoice_id" value="">
                             <div class="form-group">
                                 <label for="addr">Address</label>
                                 <input type="text" class="form-control" id="addr" value="{{addr}}" readonly>
@@ -153,9 +154,9 @@
     <!-- numpad -->
 	<script src="/static/assets/js/numpad.js"></script>
 
-    {% if qrcode_data %}
     <script>
 
+    {% if qrcode_data %}
         function from_b58(
             S            //Base58 encoded string input
         )
@@ -205,6 +206,8 @@
                                 $("#tx-amount").text("Amount: " + item.amount/100 + " ZAP");
                                 $("#tx-id").text("TXID: " + item.id);
                                 $("#payment-modal").modal("show");
+                                $("#qrcode").hide();
+                                $("#restart-link").show();
                                 return;
                             }
                         }
@@ -225,7 +228,27 @@
             console.log("  - amount:   {{amount}}");
             setTimeout(checkPayment, 5000);
         });
-    </script>
+
+    {% else %}
+
+        function setInvoiceId() {
+            var invoice_id = Math.round(Date.now() / 1000);
+            $("#invoice_id").val(invoice_id);
+            console.log("setting invoice_id: " + invoice_id);
+        }
+
+        $(document).ready(function() {
+            setInvoiceId();
+        });
+
+        $(window).bind("pageshow", function(event) {
+            if (event.originalEvent.persisted) {
+                setInvoiceId();
+            }
+        });
+
     {% endif %}
+
+    </script>
 
 </html>

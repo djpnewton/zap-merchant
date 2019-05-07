@@ -62,8 +62,7 @@ def get_qrcode():
 def req(addr=None):
     if not pw.validateAddress(addr):
         return abort(400, 'invalid address')
-    invoice_id = int(time.time())
-    return render_template('addr.html', addr=addr, invoice_id=invoice_id, qrcode_data=None)
+    return render_template('addr.html', addr=addr, qrcode_data=None)
 
 @app.route('/check/<addr>', methods=['GET'])
 def check(addr=None):
